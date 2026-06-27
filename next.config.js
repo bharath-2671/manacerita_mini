@@ -1,49 +1,53 @@
+const isGithubActions = process.env.GITHUB_ACTIONS === "true";
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
 
-  // ─── Static Export for GitHub Pages ──────────────────────────────────────
-  // Generates a fully static `out/` directory that GitHub Pages can serve.
-  output: "export",
-
-  // The repo is at github.com/bharath-2671/manacerita_mini,
-  // so GitHub Pages serves at bharath-2671.github.io/manacerita_mini/
-  basePath: "/manacerita_mini",
-
-  // Trailing slash makes all paths resolve correctly on GitHub Pages
-  // (e.g. /manacerita_mini/ instead of /manacerita_mini)
-  trailingSlash: true,
+  // Only apply static export configuration when building on GitHub Actions
+  output: isGithubActions ? "export" : undefined,
+  basePath: isGithubActions ? "/manacerita_mini" : undefined,
+  trailingSlash: isGithubActions ? true : undefined,
 
   images: {
-    // next/image optimization requires a server — disable it for static export.
-    // All images in this app are already locally optimised assets.
-    unoptimized: true,
+    // Local assets only.
+    // Use Vercel's native image optimization, but fall back to unoptimized on GitHub Pages static export.
+    unoptimized: isGithubActions,
     formats: ["image/avif", "image/webp"],
-    remotePatterns: [], // Explicitly block all remote image requests
+    remotePatterns: [], // Explicitly empty to prevent remote image optimizer DoS vectors
   },
 
-  // ─── Security Headers ─────────────────────────────────────────────────────
-  // NOTE: headers() has NO effect in static export mode (output: "export")
-  // because there is no server to apply them. They are kept here so that if
-  // you ever switch to a server-side host (Vercel, Netlify, self-hosted) the
-  // headers will automatically apply without any extra work.
+  // ─── Security Headers ───────────────────────────────────────────────────────
+  // Active when running on Vercel or a server environment.
+  // Next.js ignores this property when output is 'export' (on GitHub Pages).
   async headers() {
     return [
       {
         source: "/(.*)",
         headers: [
+          // Prevent clickjacking
           { key: "X-Frame-Options", value: "DENY" },
+
+          // Prevent MIME-type sniffing
           { key: "X-Content-Type-Options", value: "nosniff" },
+
+          // Control referrer information sent to third parties
           { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+
+          // Disable browser features not used by the app
           {
             key: "Permissions-Policy",
             value:
               "camera=(), microphone=(), geolocation=(), payment=(), usb=()",
           },
+
+          // Strict Transport Security (forces HTTPS)
           {
             key: "Strict-Transport-Security",
             value: "max-age=63072000; includeSubDomains; preload",
           },
+
+          // Content Security Policy
           {
             key: "Content-Security-Policy",
             value: [
