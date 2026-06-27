@@ -4,14 +4,7 @@ import content from "@/data/content";
 import { SectionHeader, Reveal } from "./primitives";
 import { motion, useReducedMotion } from "framer-motion";
 
-// ─── Security helper ────────────────────────────────────────────────────────
-// Only allow relative paths (/...) as image sources — blocks javascript: etc.
-function isSafeImgSrc(src) {
-  if (!src || typeof src !== "string") return false;
-  if (src.startsWith("/")) return true;
-  if (src.startsWith("blob:")) return true;
-  return false;
-}
+import { getSafeMediaSrc } from "@/lib/security";
 
 // Per-photo layout: alternating side, rotation, width and frame ratio → zigzag.
 function layoutFor(i) {
@@ -33,6 +26,8 @@ function PhotoFrame({ photo, index }) {
   const reduced = useReducedMotion();
   const L = layoutFor(index);
 
+  const safeImg = getSafeMediaSrc(photo.img);
+
   return (
     <motion.figure
       className="relative rounded-[10px] bg-white-warm px-3 pb-[42px] pt-3 shadow-photo"
@@ -48,8 +43,8 @@ function PhotoFrame({ photo, index }) {
         className="flex items-center justify-center overflow-hidden rounded-[6px] text-ink-faint"
         style={{ aspectRatio: L.ratio, background: "linear-gradient(135deg, var(--cream-deep), var(--blush) 120%)" }}
       >
-        {isSafeImgSrc(photo.img) ? (
-          <img src={photo.img} alt={photo.caption} loading="lazy" className="h-full w-full object-cover" />
+        {safeImg ? (
+          <img src={safeImg} alt={photo.caption} loading="lazy" className="h-full w-full object-cover" />
         ) : (
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" className="h-[38px] w-[38px] opacity-40">
             <rect x="3" y="3" width="18" height="18" rx="3" />

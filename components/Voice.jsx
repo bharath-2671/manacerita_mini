@@ -3,18 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import content from "@/data/content";
 import { SectionHeader, GlassCard, Reveal } from "./primitives";
-
-// ─── Security helper ────────────────────────────────────────────────────────
-/**
- * Only allow relative paths (/...) or blob: URLs as audio sources.
- * Rejects javascript:, data:, http:// and any other schemes.
- */
-function isSafeAudioSrc(src) {
-  if (!src || typeof src !== "string") return false;
-  if (src.startsWith("/")) return true;
-  if (src.startsWith("blob:")) return true;
-  return false;
-}
+import { getSafeMediaSrc } from "@/lib/security";
 
 function Waveform({ active }) {
   // stable base heights; jitter only while playing
@@ -49,7 +38,7 @@ function VoiceCard({ note }) {
   const [playing, setPlaying] = useState(false);
   const audioRef = useRef(null);
 
-  const safeAudioSrc = isSafeAudioSrc(note.audioSrc) ? note.audioSrc : null;
+  const safeAudioSrc = getSafeMediaSrc(note.audioSrc);
 
   useEffect(() => {
     if (safeAudioSrc) audioRef.current = new Audio(safeAudioSrc);

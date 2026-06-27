@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import content from "@/data/content";
 import { SectionHeader, GlassCard, Reveal } from "./primitives";
+import { getSafeMediaSrc } from "@/lib/security";
 
 function parseDur(d) {
   const [m, s] = d.split(":").map(Number);
@@ -13,15 +14,6 @@ function fmt(s) {
   return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
 }
 
-// ─── Security helper ─────────────────────────────────────────────────────────
-// Only allow relative paths or blob: URLs as audio sources.
-function isSafeAudioSrc(src) {
-  if (!src || typeof src !== "string") return false;
-  if (src.startsWith("/")) return true;
-  if (src.startsWith("blob:")) return true;
-  return false;
-}
-
 export default function Music() {
   const { eyebrow, title, titleEm, lead, track } = content.music;
   const [playing, setPlaying] = useState(false);
@@ -30,7 +22,7 @@ export default function Music() {
   const timerRef = useRef(null);
   const durSec = parseDur(track.duration);
 
-  const safeAudioSrc = isSafeAudioSrc(track.audioSrc) ? track.audioSrc : null;
+  const safeAudioSrc = getSafeMediaSrc(track.audioSrc);
 
   useEffect(() => {
     if (safeAudioSrc) audioRef.current = new Audio(safeAudioSrc);

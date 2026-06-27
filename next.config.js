@@ -3,6 +3,9 @@ const isGithubActions = process.env.GITHUB_ACTIONS === "true";
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  env: {
+    NEXT_PUBLIC_BASE_PATH: isGithubActions ? "/manacerita_mini" : "",
+  },
 
   // Only apply static export configuration when building on GitHub Actions
   output: isGithubActions ? "export" : undefined,

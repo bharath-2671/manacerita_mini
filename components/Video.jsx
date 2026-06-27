@@ -4,29 +4,14 @@ import { useState } from "react";
 import content from "@/data/content";
 import { SectionHeader, Reveal } from "./primitives";
 import { motion, useReducedMotion } from "framer-motion";
-
-// ─── Security helper ────────────────────────────────────────────────────────
-/**
- * Returns true only if the URL is a safe relative path or a blob/data URL
- * that originated from the local server. Rejects anything with a scheme
- * other than a simple path, preventing javascript: / vbscript: injections.
- */
-function isSafeMediaSrc(src) {
-  if (!src || typeof src !== "string") return false;
-  // Allow relative paths starting with /
-  if (src.startsWith("/")) return true;
-  // Allow blob: URLs (e.g. created by the browser itself)
-  if (src.startsWith("blob:")) return true;
-  // Reject everything else (javascript:, data:, http://, etc.)
-  return false;
-}
+import { getSafeMediaSrc } from "@/lib/security";
 
 function VideoCard({ clip }) {
   const reduced = useReducedMotion();
   const [active, setActive] = useState(false);
 
-  const safeThumb = isSafeMediaSrc(clip.thumb) ? clip.thumb : null;
-  const safeVideoSrc = isSafeMediaSrc(clip.videoSrc) ? clip.videoSrc : null;
+  const safeThumb = getSafeMediaSrc(clip.thumb);
+  const safeVideoSrc = getSafeMediaSrc(clip.videoSrc);
 
   // If a real video file is provided, play it inline on click.
   if (safeVideoSrc && active) {
